@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription - Générateur de Lettres de Motivation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Raleway:100,400,700');
+        
+        body {
+            background-image: url("https://images.unsplash.com/photo-1719432270166-ad1d486b413a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Raleway', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #000000;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: 'Raleway', sans-serif;
+            color: #333;
+            box-sizing: border-box;
+        }
+        
+        button {
+            background-color: #D46836;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s;
+            font-family: 'Raleway', sans-serif;
+            margin-bottom: 15px;
+        }
+        
+        button:hover {
+            background-color: #D46836;
+            opacity: 0.9;
+        }
+        
+        .form-footer {
+            text-align: center;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .form-footer a {
+            color: #D46836;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .form-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .flash-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .success {
+            background-color: rgba(212, 237, 218, 0.8);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: rgba(248, 215, 218, 0.8);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Inscription</h1>
+        
+        <div id="flashMessage" class="flash-message"></div>
+        
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="nom">Nom</label>
+                <input type="text" id="nom" name="nom" required placeholder="Votre nom">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="Votre adresse email">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required placeholder="Créez un mot de passe" minlength="8">
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Confirmez le mot de passe</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Répétez le mot de passe" minlength="8">
+            </div>
+            
+            <button type="submit">S'inscrire</button>
+        </form>
+        
+        <div class="form-footer">
+            Déjà un compte ? <a href="connexion.html">Connectez-vous</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const signupForm = document.getElementById('signupForm');
+            const flashMessage = document.getElementById('flashMessage');
+
+            signupForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nom = document.getElementById('nom').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                // Validation des champs
+                if (!nom || !email || !password || !confirmPassword) {
+                    showFlashMessage('Veuillez remplir tous les champs.', 'error');
+                    return;
+                }
+
+                // Validation de l'email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    showFlashMessage('Veuillez entrer une adresse email valide.', 'error');
+                    return;
+                }
+
+                // Validation du mot de passe
+                if (password.length < 8) {
+                    showFlashMessage('Le mot de passe doit contenir au moins 8 caractères.', 'error');
+                    return;
+                }
+
+                // Vérification de la correspondance des mots de passe
+                if (password !== confirmPassword) {
+                    showFlashMessage('Les mots de passe ne correspondent pas.', 'error');
+                    return;
+                }
+
+                // Récupérer les utilisateurs existants
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+                // Vérifier si l'email existe déjà
+                const userExists = users.some(u => u.email === email);
+                if (userExists) {
+                    showFlashMessage('Un compte avec cet email existe déjà.', 'error');
+                    return;
+                }
+
+                // Ajouter le nouvel utilisateur
+                const newUser = {
+                    nom: nom,
+                    email: email,
+                    password: password, // IMPORTANT : En production, JAMAIS stocker le mot de passe en clair
+                    dateInscription: new Date().toISOString(),
+                    essaisGratuits: 5
+                };
+
+                // Ajouter le nouvel utilisateur au tableau
+                users.push(newUser);
+
+                // Sauvegarder dans le localStorage
+                localStorage.setItem('users', JSON.stringify(users));
+
+                // Afficher un message de succès
+                showFlashMessage('Inscription réussie !', 'success');
+
+                // Rediriger vers la page de connexion après 1 seconde
+                setTimeout(() => {
+                    window.location.href = 'connexion.html';
+                }, 1000);
+            });
+
+            function showFlashMessage(message, type) {
+                flashMessage.textContent = message;
+                flashMessage.className = 'flash-message ' + type;
+                flashMessage.style.display = 'block';
+                
+                // Faire disparaître le message après 3 secondes
+                setTimeout(() => {
+                    flashMessage.style.display = 'none';
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>

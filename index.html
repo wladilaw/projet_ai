@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Lettres de Motivation</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <a href="connexion.html" class="login-link">Connexion</a>
+        <a href="inscription.html" class="signup-link">Inscription</a>
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Raleway:100,400,700');
+        
+        body {
+            background-image: url("https://images.unsplash.com/photo-1719432270166-ad1d486b413a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Raleway', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 80%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 25px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: absolute;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-top: 0;
+            padding-top: 10px;
+            cursor: move;
+            text-align: center;
+        }
+        
+        h2, h3 {
+            color: #2c3e50;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;  
+            transition: background-color 0.3s;
+        }
+        
+        .tab.active {
+            background-color: #D46836;
+            color: white;
+            border-color: #D46836;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #000000;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            font-family: 'Raleway', sans-serif;
+            color: #333;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #D46836;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+            font-family: 'Raleway', sans-serif;
+        }
+        
+        button:hover {
+            background-color: #D46836;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .preview {
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', Courier, monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+            color: #333;
+        }
+        
+        .flash-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .success {
+            background-color: rgba(212, 237, 218, 0.8);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: rgba(248, 215, 218, 0.8);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info-box {
+            background-color: rgba(232, 244, 248, 0.8);
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .highlight {
+            background-color: rgba(255, 250, 205, 0.8);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(241, 241, 241, 0.7);
+            padding: 10px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        
+        .template-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .small-button {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        /* Style pour la page de paiement */
+        .page-paiement {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .container-paiement {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .container-paiement h2 {
+            color: #D46836;
+            margin-bottom: 20px;
+        }
+
+        #boutonPayer {
+            background-color: #D46836;
+            color: white;
+            padding: 12px 25px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+        }
+
+        #boutonPayer:hover {
+            background-color: #D46836;
+        }
+
+        .note {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        .compteur-utilisations {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .compteur-utilisations span {
+            font-weight: bold;
+            color: #D46836;
+        }
+
+        #stripe-payment-form {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+        }
+
+        #card-element {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            margin-bottom: 20px;
+        }
+
+        #card-error {
+            color: #D46836;
+            text-align: left;
+            font-size: 14px;
+            margin-top: 5px;
+            min-height: 20px;
+        }
+
+        .spinner,
+        .spinner:before,
+        .spinner:after {
+            border-radius: 50%;
+        }
+        .spinner {
+            color: #ffffff;
+            font-size: 22px;
+            text-indent: -99999px;
+            margin: 0px auto;
+            position: relative;
+            width: 20px;
+            height: 20px;
+            box-shadow: inset 0 0 0 2px;
+            -webkit-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            transform: translateZ(0);
+            display: none;
+        }
+        .spinner:before,
+        .spinner:after {
+            position: absolute;
+            content: "";
+        }
+        .spinner:before {
+            width: 10.4px;
+            height: 20.4px;
+            background: #D46836;
+            border-radius: 20.4px 0 0 20.4px;
+            top: -0.2px;
+            left: -0.2px;
+            -webkit-transform-origin: 10.4px 10.2px;
+            transform-origin: 10.4px 10.2px;
+            -webkit-animation: loading 2s infinite ease 1.5s;
+            animation: loading 2s infinite ease 1.5s;
+        }
+        .spinner:after {
+            width: 10.4px;
+            height: 10.2px;
+            background: #D46836;
+            border-radius: 0 10.2px 10.2px 0;
+            top: -0.1px;
+            left: 10.2px;
+            -webkit-transform-origin: 0px 10.2px;
+            transform-origin: 0px 10.2px;
+            -webkit-animation: loading 2s infinite ease;
+            animation: loading 2s infinite ease;
+        }
+        @keyframes loading {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Générateur de Lettres de Motivation</h1>
+        
+        <div class="flash-message" id="flashMessage"></div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="generate">Générer une lettre</div>
+            <div class="tab" data-tab="import">Importer ma lettre</div>
+            <div class="tab" data-tab="template">Gérer les templates</div>
+        </div>
+        
+        <div class="tab-content active" id="generateTab">
+            <div class="form-group">
+                <label for="entreprise">Nom de l'entreprise:</label>
+                <input type="text" id="entreprise" placeholder="Ex: Microsoft, Google, etc.">
+            </div>
+            
+            <div class="form-group">
+                <label for="poste">Intitulé du poste (optionnel):</label>
+                <input type="text" id="poste" placeholder="Ex: Développeur Web Senior">
+            </div>
+            
+            <div class="form-group">
+                <label for="templateSelect">Sélectionner un template:</label>
+                <select id="templateSelect">
+                    <option value="default">Template par défaut</option>
+                    <!-- Les templates enregistrés seront ajoutés ici dynamiquement -->
+                </select>
+            </div>
+            
+            <button id="genererBtn">Générer la lettre</button>
+            <button id="resetBtn">Réinitialiser</button>
+            
+            <div class="form-group" id="previewSection" style="display: none;">
+                <h3>Aperçu de la lettre:</h3>
+                <div class="preview" id="apercu"></div>
+                <div style="margin-top: 15px;">
+                    <button id="telechargerBtn" disabled>Télécharger (.txt)</button>
+                    <button id="telechargerDocBtn" disabled>Télécharger (.docx)</button>
+                    <button id="copierBtn" disabled>Copier dans le presse-papiers</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="importTab">
+            <h2>Importer et personnaliser ma lettre</h2>
+            
+            <div class="info-box">
+                <p>Utilisez cette fonction pour personnaliser votre propre lettre de motivation. Collez votre lettre ci-dessous en utilisant <span class="highlight">{entreprise}</span> là où le nom de l'entreprise doit apparaître et <span class="highlight">{poste}</span> pour l'intitulé du poste.</p>
+                <p>Exemple: "Je souhaite postuler au poste de <span class="highlight">{poste}</span> au sein de <span class="highlight">{entreprise}</span>."</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="importedLetter">Votre lettre de motivation:</label>
+                <textarea id="importedLetter" placeholder="Collez votre lettre ici et remplacez les mots à personnaliser par {entreprise} et {poste}..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="entrepriseImport">Nom de l'entreprise:</label>
+                <input type="text" id="entrepriseImport" placeholder="Ex: Microsoft, Google, etc.">
+            </div>
+            
+            <div class="form-group">
+                <label for="posteImport">Intitulé du poste (optionnel):</label>
+                <input type="text" id="posteImport" placeholder="Ex: Développeur Web Senior">
+            </div>
+            
+            <button id="personnaliserBtn">Personnaliser ma lettre</button>
+            <button id="sauvegarderCommeTemplateBtn">Sauvegarder comme template</button>
+            <button id="resetImportBtn">Réinitialiser</button>
+            
+            <div class="form-group" id="previewImportSection" style="display: none;">
+                <h3>Aperçu de la lettre personnalisée:</h3>
+                <div class="preview" id="apercuImport"></div>
+                <div style="margin-top: 15px;">
+                    <button id="telechargerImportBtn" disabled>Télécharger (.txt)</button>
+                    <button id="copierImportBtn" disabled>Copier dans le presse-papiers</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="templateTab">
+            <h2>Gérer les templates</h2>
+            
+            <div class="form-group">
+                <label for="templateName">Nom du template:</label>
+                <input type="text" id="templateName" placeholder="Ex: Template professionnel">
+            </div>
+            
+            <div class="form-group">
+                <label for="templateContent">Contenu du template:</label>
+                <textarea id="templateContent" placeholder="Entrez votre template ici. Utilisez {entreprise} pour insérer le nom de l'entreprise et {poste} pour l'intitulé du poste."></textarea>
+            </div>
+            
+            <button id="sauvegarderTemplateBtn">Sauvegarder le template</button>
+            <button id="resetTemplateBtn">Réinitialiser</button>
+            
+            <div id="savedTemplates">
+                <h3>Templates enregistrés</h3>
+                <p id="noTemplates">Aucun template personnalisé enregistré.</p>
+                <div id="templatesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration de Stripe
+        // Remplacer par votre clé publique Stripe
+        const stripePublicKey = 'pk_test_TYooMQauvdEDq54NiTphI7jx';
+        const stripe = Stripe(stripePublicKey);
+
+        // Fonction pour vérifier si l'utilisateur a encore des essais gratuits
+        function verifierEssaisGratuits() {
+            // Vérifier si l'utilisateur a un abonnement premium
+            if (localStorage.getItem('premiumActive') === 'true') {
+                return true;
+            }
+            
+            // Récupérer le nombre d'utilisations du localStorage
+            let utilisations = localStorage.getItem('utilisationsCompteur');
+            
+            // Si c'est la première utilisation, initialiser le compteur
+            if (utilisations === null) {
+                utilisations = 0;
+                localStorage.setItem('utilisationsCompteur', utilisations);
+            } else {
+                utilisations = parseInt(utilisations);
+            }
+            
+            // Mettre à jour le compteur affiché
+            mettreAJourCompteurAffiche();
+            
+            // Vérifier si l'utilisateur a épuisé ses essais gratuits
+            if (utilisations >= 5) {
+                // Afficher la page de paiement
+                afficherPagePaiement();
+                return false;
+            } else {
+                // Incrémenter le compteur d'utilisations
+                localStorage.setItem('utilisationsCompteur', utilisations + 1);
+                // Mettre à jour le compteur affiché après incrémentation
+                mettreAJourCompteurAffiche();
+                return true;
+            }
+        }
+
+        // Fonction pour mettre à jour le compteur affiché
+        function mettreAJourCompteurAffiche() {
+            const compteurElement = document.querySelector('.compteur-utilisations');
+            if (compteurElement) {
+                const utilisations = parseInt(localStorage.getItem('utilisationsCompteur') || '0');
+                const restantes = 5 - utilisations;
+                compteurElement.querySelector('span').textContent = Math.max(0, restantes);
+            }
+        }
+
+        // Fonction pour afficher la page de paiement avec Stripe
+        function afficherPagePaiement() {
+            // Cacher le contenu de l'application
+            document.querySelector('.container').style.display = 'none';
+            
+            // Créer et afficher la page de paiement
+            const pagePaiement = document.createElement('div');
+            pagePaiement.className = 'page-paiement';
+            pagePaiement.innerHTML = `
+                <div class="container-paiement">
+                    <h2>Accès limité</h2>
+                    <p>Vous avez utilisé vos 5 essais gratuits.</p>
+                    <p>Pour continuer à utiliser notre générateur de lettres de motivation, veuillez souscrire à notre offre premium pour seulement 1€.</p>
+                    
+                    <form id="stripe-payment-form">
+                        <div id="card-element">
+                            <!-- Les éléments Stripe seront insérés ici -->
+                        </div>
+                        <div id="card-error" role="alert"></div>
+                        
+                        <button id="boutonPayer">
+                            <div class="spinner" id="spinner"></div>
+                            <span id="button-text">Payer 1€ et continuer</span>
+                        </button>
+                    </form>
+                    
+                    <p class="note">* Pour cet exemple, utilisez le numéro de carte 4242 4242 4242 4242, une date future et un code CVC à 3 chiffres.</p>
+                </div>
+            `;
+            
+            document.body.appendChild(pagePaiement);
+            
+            // Créer un élément de carte Stripe
+            const elements = stripe.elements();
+            const style = {
+                base: {
+                    color: "#32325d",
+                    fontFamily: 'Raleway, sans-serif',
+                    fontSmoothing: "antialiased",
+                    fontSize: "16px",
+                    "::placeholder": {
+                        color: "#aab7c4"
+                    }
+                },
+                invalid: {
+                    color: "#D46836",
+                    iconColor: "#D46836"
+                }
+            };
+            
+            const card = elements.create("card", { style: style });
+            card.mount("#card-element");
+            
+            // Gérer les erreurs de validation de la carte
+            card.on("change", function(event) {
+                const displayError = document.getElementById("card-error");
+                if (event.error) {
+                    displayError.textContent = event.error.message;
+                } else {
+                    displayError.textContent = "";
+                }
+            });
+            
+            // Gérer la soumission du formulaire
+            const form = document.getElementById("stripe-payment-form");
+            form.addEventListener("submit", function(event) {
+                event.preventDefault();
+                
+                // Désactiver le bouton pendant le traitement du paiement
+                const boutonPayer = document.getElementById("boutonPayer");
+                boutonPayer.disabled = true;
+                document.getElementById("spinner").style.display = "inline-block";
+                document.getElementById("button-text").style.opacity = "0.5";
+                
+                // Simuler un paiement réussi (dans un contexte réel, vous appelleriez votre backend)
+                setTimeout(function() {
+                    // Activer l'accès premium
+                    localStorage.setItem('premiumActive', 'true');
+                    localStorage.setItem('utilisationsCompteur', '0');
+                    
+                    // Afficher un message de succès
+                    const containerPaiement = document.querySelector('.container-paiement');
+                    containerPaiement.innerHTML = `
+                        <h2>Paiement réussi !</h2>
+                        <p>Merci pour votre achat. Vous avez maintenant un accès premium illimité à notre générateur de lettres de motivation.</p>
+                        <button id="retourApp">Retourner à l'application</button>
+                    `;
+                    
+                    document.getElementById("retourApp").addEventListener('click', function() {
+                        pagePaiement.remove();
+                        document.querySelector('.container').style.display = 'block';
+                        mettreAJourCompteurAffiche();
+                    });
+                }, 2000);
+            });
+        }
+
+        // Template par défaut
+        const defaultTemplate = `[Votre Nom]
+[Votre Adresse]
+[Votre Email]
+[Votre Téléphone]
+[Date]
+
+À l'attention du service des Ressources Humaines
+{entreprise}
+[Adresse de l'entreprise]
+
+Objet : Candidature pour le poste de {poste}
+
+Madame, Monsieur,
+
+C'est avec un grand intérêt que je soumets ma candidature pour le poste de {poste} au sein de {entreprise}, entreprise reconnue pour sa [qualité/innovation/expertise] dans le domaine de [secteur d'activité].
+
+Actuellement [votre situation professionnelle actuelle], j'ai développé de solides compétences en [compétence 1], [compétence 2] et [compétence 3]. Mon expérience chez [employeur précédent] m'a permis de [réalisation importante] ce qui serait directement applicable aux défis que présente ce poste chez {entreprise}.
+
+Votre entreprise m'attire particulièrement pour sa [caractéristique de l'entreprise qui vous intéresse] et je suis convaincu(e) que mes compétences correspondent aux besoins de {entreprise}. Je suis particulièrement intéressé(e) par [projet ou aspect spécifique de l'entreprise] et souhaite contribuer activement à son développement.
+
+Je serais ravi(e) de pouvoir discuter davantage de ma candidature lors d'un entretien. Je reste à votre disposition pour tout renseignement complémentaire.
+
+Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+[Votre Nom]`;
+
+        // Initialisation des données
+        let templates = {
+            "default": {
+                name: "Template par défaut",
+                content: defaultTemplate
+            }
+        };
+
+        // Fonction pour obtenir la date actuelle au format français
+        function getFormattedDate() {
+            const now = new Date();
+            return now.toLocaleDateString('fr-FR');
+        }
+
+        // Fonction pour afficher un message flash
+        function showFlashMessage(message, type) {
+            const flashElement = document.getElementById('flashMessage');
+            flashElement.textContent = message;
+            flashElement.className = 'flash-message ' + type;
+            flashElement.style.display = 'block';
+            
+            // Faire disparaître le message après 3 secondes
+            setTimeout(() => {
+                flashElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // Fonction pour générer la lettre de motivation
+        function genererLettreMotivation(entreprise, poste, templateKey) {
+            // Vérifier les essais gratuits d'abord
+            if (!verifierEssaisGratuits()) {
+                return false;
+            }
+            
+            // Si aucun template n'est spécifié, utiliser le template par défaut
+            const template = templates[templateKey] ? templates[templateKey].content : defaultTemplate;
+            
+            // Remplacer les marqueurs par les valeurs
+            let lettre = template.replaceAll('{entreprise}', entreprise);
+            
+            // Si le poste est spécifié, le remplacer, sinon utiliser un texte générique
+            if (poste) {
+                lettre = lettre.replaceAll('{poste}', poste);
+            } else {
+                lettre = lettre.replaceAll('{poste}', '[intitulé du poste]');
+            }
+            
+            // Insérer la date actuelle
+            const date = getFormattedDate();
+            lettre = lettre.replace('[Date]', date);
+            
+            return lettre;
+        }
+
+        // Fonction pour personnaliser une lettre importée
+        function personnaliserLettreImportee(lettre, entreprise, poste) {
+            // Vérifier les essais gratuits d'abord
+            if (!verifierEssaisGratuits()) {
+                return false;
+            }
+            
+            let lettrePersonnalisee = lettre.replaceAll('{entreprise}', entreprise);
+            
+            if (poste) {
+                lettrePersonnalisee = lettrePersonnalisee.replaceAll('{poste}', poste);
+            } else {
+                lettrePersonnalisee = lettrePersonnalisee.replaceAll('{poste}', '[intitulé du poste]');
+            }
+            
+            return lettrePersonnalisee;
+        }
+
+        // Fonction pour télécharger la lettre en format texte
+        function telechargerLettre(contenu, nomEntreprise) {
+            const blob = new Blob([contenu], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lettre_motivation_${nomEntreprise.replace(/\s+/g, '_')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Fonction pour copier le contenu dans le presse-papiers
+        function copierContenu(contenu) {
+            navigator.clipboard.writeText(contenu)
+                .then(() => {
+                    showFlashMessage('Lettre copiée dans le presse-papiers !', 'success');
+                })
+                .catch(err => {
+                    showFlashMessage('Erreur lors de la copie: ' + err, 'error');
+                });
+        }
+
+        // Fonction pour charger les templates depuis le localStorage
+        function chargerTemplates() {
+            const savedTemplates = localStorage.getItem('lettreMotivationTemplates');
+            if (savedTemplates) {
+                try {
+                    templates = JSON.parse(savedTemplates);
+                    if (!templates.default) {
+                        templates.default = {
+                            name: "Template par défaut",
+                            content: defaultTemplate
+                        };
+                    }
+                } catch (e) {
+                    console.error("Erreur lors du chargement des templates:", e);
+                    templates = {
+                        "default": {
+                            name: "Template par défaut",
+                            content: defaultTemplate
+                        }
+                    };
+                }
+            }
+            mettreAJourListeTemplates();
+            mettreAJourSelectTemplates();
+        }
+
+        // Fonction pour sauvegarder les templates dans le localStorage
+        function sauvegarderTemplates() {
+            localStorage.setItem('lettreMotivationTemplates', JSON.stringify(templates));
+        }
+
+        // Fonction pour mettre à jour la liste des templates
+        function mettreAJourListeTemplates() {
+            const templatesList = document.getElementById('templatesList');
+            const noTemplates = document.getElementById('noTemplates');
+            
+            templatesList.innerHTML = '';
+            
+            // Filtrer le template par défaut pour ne pas l'afficher dans la liste des templates personnalisés
+            const customTemplates = Object.entries(templates).filter(([key]) => key !== 'default');
+            
+            if (customTemplates.length === 0) {
+                noTemplates.style.display = 'block';
+            } else {
+                noTemplates.style.display = 'none';
+                
+                customTemplates.forEach(([key, template]) => {
+                    const templateItem = document.createElement('div');
+                    templateItem.className = 'template-item';
+                    const templateName = document.createElement('div');
+                    templateName.textContent = template.name;
+                    
+                    const templateActions = document.createElement('div');
+                    templateActions.className = 'template-actions';
+                    
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'small-button';
+                    editBtn.textContent = 'Modifier';
+                    editBtn.addEventListener('click', () => {
+                        document.getElementById('templateName').value = template.name;
+                        document.getElementById('templateContent').value = template.content;
+                        // Stocker la clé du template en cours d'édition
+                        document.getElementById('templateName').dataset.editKey = key;
+                    });
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'small-button';
+                    deleteBtn.textContent = 'Supprimer';
+                    deleteBtn.addEventListener('click', () => {
+                        if (confirm(`Êtes-vous sûr de vouloir supprimer le template "${template.name}" ?`)) {
+                            delete templates[key];
+                            sauvegarderTemplates();
+                            mettreAJourListeTemplates();
+                            mettreAJourSelectTemplates();
+                            showFlashMessage(`Template "${template.name}" supprimé avec succès.`, 'success');
+                        }
+                    });
+                    
+                    templateActions.appendChild(editBtn);
+                    templateActions.appendChild(deleteBtn);
+                    
+                    templateItem.appendChild(templateName);
+                    templateItem.appendChild(templateActions);
+                    
+                    templatesList.appendChild(templateItem);
+                });
+            }
+        }
+
+        // Fonction pour mettre à jour le select des templates
+        function mettreAJourSelectTemplates() {
+            const templateSelect = document.getElementById('templateSelect');
+            templateSelect.innerHTML = '';
+            
+            Object.entries(templates).forEach(([key, template]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = template.name;
+                templateSelect.appendChild(option);
+            });
+        }
+
+        // Initialisation au chargement de la page
+        $(document).ready(function() {
+            // Rendre la fenêtre déplaçable
+            $(".container").draggable({
+                handle: "h1",
+                containment: "body",
+                scroll: false
+            });
+            
+            // Ajouter un compteur d'essais gratuits
+            const compteurUtilisations = document.createElement('div');
+            compteurUtilisations.className = 'compteur-utilisations';
+            compteurUtilisations.innerHTML = '<p>Essais gratuits restants: <span>5</span></p>';
+            document.querySelector('.container').appendChild(compteurUtilisations);
+            
+            // Mettre à jour l'affichage du compteur
+            mettreAJourCompteurAffiche();
+            
+            // Charger les templates
+            chargerTemplates();
+            
+            // Navigation entre les onglets
+            $(".tab").click(function() {
+                // Enlever la classe active de tous les onglets et contenus
+                $(".tab").removeClass("active");
+                $(".tab-content").removeClass("active").hide();
+                
+                // Ajouter la classe active à l'onglet cliqué
+                $(this).addClass("active");
+                
+                // Afficher le contenu correspondant
+                $("#" + $(this).data("tab") + "Tab").addClass("active").show();
+            });
+            
+            // Exemple de lettre pour faciliter le test
+            const exempleLettre = `Jean Dupont
+123 Rue de l'Exemple
+jean.dupont@email.com
+04 XX XX XX XX
+${getFormattedDate()}
+
+À l'attention du service Recrutement
+{entreprise}
+Adresse de l'entreprise
+
+Objet : Candidature au poste de {poste}
+
+Madame, Monsieur,
+
+Je me permets de vous adresser ma candidature pour le poste de {poste} au sein de {entreprise}.
+
+Ayant récemment obtenu mon diplôme en informatique et fort d'une expérience de 3 ans dans le développement logiciel, je suis convaincu de pouvoir apporter mes compétences techniques et ma motivation à votre équipe.
+
+{entreprise} est reconnue pour son innovation dans le domaine technologique, et je serais honoré de contribuer à vos projets.
+
+Je reste à votre disposition pour un entretien qui me permettrait de vous exposer plus en détail mes motivations.
+
+Veuillez agréer, Madame, Monsieur, l'expression de mes salutations distinguées.
+
+Jean Dupont`;
+            
+            // Pré-remplir le champ d'importation pour faciliter le test
+            $("#importTab").one("click", function() {
+                if (!$("#importedLetter").val()) {
+                    $("#importedLetter").val(exempleLettre);
+                }
+            });
+            
+            // Onglet Générer une lettre
+            $("#genererBtn").click(function() {
+                const entreprise = $("#entreprise").val().trim();
+                const poste = $("#poste").val().trim();
+                const templateKey = $("#templateSelect").val();
+                
+                if (!entreprise) {
+                    showFlashMessage('Veuillez entrer le nom de l\'entreprise.', 'error');
+                    return;
+                }
+                
+                const lettre = genererLettreMotivation(entreprise, poste, templateKey);
+                
+                // Si la fonction renvoie false, l'utilisateur n'a plus d'essais gratuits
+                if (lettre === false) {
+                    return;
+                }
+                
+                $("#apercu").text(lettre);
+                $("#previewSection").show();
+                $("#telechargerBtn, #telechargerDocBtn, #copierBtn").prop("disabled", false);
+                
+                // Faire défiler jusqu'à l'aperçu
+                $("#previewSection")[0].scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            $("#resetBtn").click(function() {
+                $("#entreprise, #poste").val('');
+                $("#previewSection").hide();
+            });
+            
+            $("#telechargerBtn").click(function() {
+                const entreprise = $("#entreprise").val().trim();
+                const lettre = $("#apercu").text();
+                telechargerLettre(lettre, entreprise);
+                showFlashMessage('Lettre téléchargée avec succès !', 'success');
+            });
+            
+            $("#copierBtn").click(function() {
+                const lettre = $("#apercu").text();
+                copierContenu(lettre);
+            });
+            
+            $("#telechargerDocBtn").click(function() {
+                showFlashMessage('Fonctionnalité en cours de développement. La lettre a été téléchargée au format texte.', 'success');
+                const entreprise = $("#entreprise").val().trim();
+                const lettre = $("#apercu").text();
+                telechargerLettre(lettre, entreprise);
+            });
+            
+            // Onglet Importer ma lettre
+            $("#personnaliserBtn").click(function() {
+                const lettre = $("#importedLetter").val().trim();
+                const entreprise = $("#entrepriseImport").val().trim();
+                const poste = $("#posteImport").val().trim();
+                
+                if (!lettre) {
+                    showFlashMessage('Veuillez entrer le contenu de votre lettre.', 'error');
+                    return;
+                }
+                
+                if (!entreprise) {
+                    showFlashMessage('Veuillez entrer le nom de l\'entreprise.', 'error');
+                    return;
+                }
+                
+                const lettrePersonnalisee = personnaliserLettreImportee(lettre, entreprise, poste);
+                
+                // Si la fonction renvoie false, l'utilisateur n'a plus d'essais gratuits
+                if (lettrePersonnalisee === false) {
+                    return;
+                }
+                
+                $("#apercuImport").text(lettrePersonnalisee);
+                $("#previewImportSection").show();
+                $("#telechargerImportBtn, #copierImportBtn").prop("disabled", false);
+                
+                // Faire défiler jusqu'à l'aperçu
+                $("#previewImportSection")[0].scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            $("#resetImportBtn").click(function() {
+                $("#importedLetter, #entrepriseImport, #posteImport").val('');
+                $("#previewImportSection").hide();
+            });
+            
+            $("#telechargerImportBtn").click(function() {
+                const entreprise = $("#entrepriseImport").val().trim();
+                const lettre = $("#apercuImport").text();
+                telechargerLettre(lettre, entreprise);
+                showFlashMessage('Lettre téléchargée avec succès !', 'success');
+            });
+            
+            $("#copierImportBtn").click(function() {
+                const lettre = $("#apercuImport").text();
+                copierContenu(lettre);
+            });
+            
+            $("#sauvegarderCommeTemplateBtn").click(function() {
+                const lettreContent = $("#importedLetter").val().trim();
+                
+                if (!lettreContent) {
+                    showFlashMessage('Veuillez d\'abord entrer le contenu de votre lettre.', 'error');
+                    return;
+                }
+                
+                // Demander le nom du template
+                const templateName = prompt('Entrez un nom pour ce template:', 'Ma lettre personnalisée');
+                
+                if (templateName) {
+                    const key = 'template_' + Date.now();
+                    templates[key] = {
+                        name: templateName,
+                        content: lettreContent
+                    };
+                    
+                    sauvegarderTemplates();
+                    mettreAJourListeTemplates();
+                    mettreAJourSelectTemplates();
+                    
+                    showFlashMessage(`Template "${templateName}" enregistré avec succès.`, 'success');
+                    
+                    // Proposer de passer à l'onglet de génération
+                    if (confirm('Voulez-vous utiliser ce template maintenant?')) {
+                        // Sélectionner le nouveau template dans le menu déroulant
+                        $("#templateSelect").val(key);
+                        
+                        // Activer l'onglet de génération
+                        $(".tab").removeClass("active");
+                        $(".tab-content").removeClass("active").hide();
+                        $(".tab[data-tab='generate']").addClass("active");
+                        $("#generateTab").addClass("active").show();
+                    }
+                }
+            });
+            
+            // Onglet Gérer les templates
+            $("#sauvegarderTemplateBtn").click(function() {
+                const templateName = $("#templateName").val().trim();
+                const templateContent = $("#templateContent").val().trim();
+                
+                if (!templateName || !templateContent) {
+                    showFlashMessage('Veuillez remplir tous les champs.', 'error');
+                    return;
+                }
+                
+                // Vérifier si on est en mode édition
+                const editKey = $("#templateName").data("editKey");
+                
+                // Générer une clé unique si nécessaire
+                const key = editKey || 'template_' + Date.now();
+                
+                templates[key] = {
+                    name: templateName,
+                    content: templateContent
+                };
+                
+                sauvegarderTemplates();
+                mettreAJourListeTemplates();
+                mettreAJourSelectTemplates();
+                
+                // Réinitialiser les champs
+                $("#templateName").val('');
+                $("#templateContent").val('');
+                $("#templateName").removeData("editKey");
+                
+                showFlashMessage(`Template "${templateName}" ${editKey ? 'mis à jour' : 'enregistré'} avec succès.`, 'success');
+            });
+            
+            $("#resetTemplateBtn").click(function() {
+                $("#templateName").val('');
+                $("#templateContent").val('');
+                $("#templateName").removeData("editKey");
+            });
+        });
+    </script>
+</body>
+</html>
