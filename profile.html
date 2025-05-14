@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Profil - Générateur de Lettres de Motivation</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="payment-system.js" defer></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Raleway:100,400,700');
+        
+        body {
+            background-image: url("https://images.unsplash.com/photo-1719432270166-ad1d486b413a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            font-family: 'Raleway', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        /* Navbar styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 15px 30px;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+        
+        .auth-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .auth-links a {
+            color: white;
+            text-decoration: none;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+        
+        .auth-links a:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .auth-links .user-welcome {
+            color: white;
+            padding: 8px 15px;
+            font-weight: 500;
+        }
+
+        .profile-container {
+            background-color: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin: 100px auto 40px;
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .profile-header h2 {
+            color: #fff;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        
+        .profile-email {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .profile-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 25px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #D46836;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .profile-section {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .profile-section h3 {
+            color: rgba(0, 0, 0, 0.9);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .profile-section h3::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background-color: #D46836;
+        }
+        
+        .offer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .offer-card {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .offer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .offer-card.popular {
+            border: 2px solid #D46836;
+        }
+        
+        .popular-tag {
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            background-color: #D46836;
+            color: white;
+            padding: 3px 30px;
+            font-size: 12px;
+            transform: rotate(45deg);
+            z-index: 1;
+        }
+        
+        .offer-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .offer-header h4 {
+            margin: 10px 0;
+            color: #fff;
+            font-size: 18px;
+        }
+        
+        .offer-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #D46836;
+            margin-bottom: 5px;
+        }
+        
+        .offer-tokens {
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .offer-features {
+            flex-grow: 1;
+        }
+        
+        .offer-features ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .offer-features li {
+            padding: 5px 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .offer-features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #D46836;
+            font-weight: bold;
+        }
+        
+        .offer-btn {
+            background-color: #D46836;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            font-family: 'Raleway', sans-serif;
+        }
+        
+        .offer-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #fff;
+        }
+        
+        .history-table th, .history-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .history-table th {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.9);
+        }
+        
+        .history-table tbody tr {
+            transition: background-color 0.3s;
+        }
+        
+        .history-table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: rgba(0, 0, 0, 0.7);
+            font-style: italic;
+        }
+        
+        .user-settings {
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: rgba(255, 0, 0, 0.1);
+            font-family: 'Raleway', sans-serif;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #D46836;
+        }
+        
+        .premium-badge {
+            display: inline-block;
+            background-color: #FFD700;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-left: 10px;
+            vertical-align: middle;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+            }
+            to {
+                box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            }
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .action-btn {
+            background-color: #D46836;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            font-family: 'Raleway', sans-serif;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .action-btn.secondary {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-navigation {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            color: rgba(0, 0, 0, 0.7);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: rgba(255, 0, 0, 0.7);
+        }
+        
+        .tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #D46836;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .flash-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .success {
+            background-color: rgba(212, 237, 218, 0.8);
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: rgba(248, 215, 218, 0.8);
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .back-to-home {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 4px;
+            color: white;
+            text-decoration: none;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+        
+        .back-to-home:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Lien de retour à l'accueil -->
+    <a href="index.html" class="back-to-home">← Retour à l'accueil</a>
+    
+    <div class="flash-message" id="flashMessage"></div>
+    
+    <div class="profile-container">
+        <div class="profile-header">
+            <h2>Bienvenue, <span id="userName">Utilisateur</span> <span class="premium-badge" id="premiumBadge" style="display: none;">👑 Premium</span></h2>
+            <p class="profile-email" id="userEmail">utilisateur@example.com</p>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="tokensValue">0</span>
+                    <span class="stat-label">Jetons disponibles</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="lettersCount">0</span>
+                    <span class="stat-label">Lettres générées</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-navigation">
+            <div class="tab active" data-tab="offers">Acheter des jetons</div>
+            <div class="tab" data-tab="history">Historique</div>
+            <div class="tab" data-tab="settings">Paramètres</div>
+        </div>
+        
+        <div class="tab-content active" id="offersTab">
+            <div class="profile-section">
+                <h3>Offres disponibles</h3>
+                <p>Augmentez votre nombre de jetons pour créer plus de lettres de motivation.</p>
+                
+                <div class="offer-grid">
+                    <div class="offer-card">
+                        <div class="offer-header">
+                            <h4>Formule Basique</h4>
+                            <div class="offer-price">1.00€</div>
+                            <div class="offer-tokens">10 jetons</div>
+                        </div>
+                        <div class="offer-features">
+                            <ul>
+                                <li>10 lettres de motivation</li>
+                                <li>Téléchargement en .txt</li>
+                                <li>Accès à tous les templates</li>
+                            </ul>
+                        </div>
+                        <button class="offer-btn" data-plan-id="basic">Obtenir</button>
+                    </div>
+                    
+                    <div class="offer-card popular">
+                        <span class="popular-tag">Populaire</span>
+                        <div class="offer-header">
+                            <h4>Formule Standard</h4>
+                            <div class="offer-price">4.99€</div>
+                            <div class="offer-tokens">50 jetons</div>
+                        </div>
+                        <div class="offer-features">
+                            <ul>
+                                <li>50 lettres de motivation</li>
+                                <li>Téléchargement en .txt et .docx</li>
+                                <li>Historique de vos lettres</li>
+                            </ul>
+                        </div>
+                        <button class="offer-btn" data-plan-id="standard">Obtenir</button>
+                    </div>
+                    
+                    <div class="offer-card">
+                        <div class="offer-header">
+                            <h4>Formule Premium</h4>
+                            <div class="offer-price">9.99€</div>
+                            <div class="offer-tokens">120 jetons</div>
+                        </div>
+                        <div class="offer-features">
+                            <ul>
+                                <li>120 lettres de motivation</li>
+                                <li>Téléchargement multiple</li>
+                                <li>Support prioritaire</li>
+                                <li>Templates exclusifs</li>
+                            </ul>
+                        </div>
+                        <button class="offer-btn" data-plan-id="premium">Obtenir</button>
+                    </div>
+                    
+                    <div class="offer-card">
+                        <div class="offer-header">
+                            <h4>Formule Illimitée</h4>
+                            <div class="offer-price">19.99€</div>
+                            <div class="offer-tokens">∞ Illimité</div>
+                        </div>
+                        <div class="offer-features">
+                            <ul>
+                                <li>Lettres illimitées</li>
+                                <li>Tous les formats disponibles</li>
+                                <li>Support VIP</li>
+                                <li>Tous les templates premium</li>
+                            </ul>
+                        </div>
+                        <button class="offer-btn" data-plan-id="unlimited">Obtenir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="historyTab">
+            <div class="profile-section">
+                <h3>Historique des paiements</h3>
+                
+                <table class="history-table" id="paymentsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Formule</th>
+                            <th>Montant</th>
+                            <th>Jetons</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                        <!-- Les données seront ajoutées dynamiquement -->
+                    </tbody>
+                </table>
+                
+                <div class="no-data" id="noPaymentsMessage" style="display: none;">
+                    Aucun paiement effectué pour le moment.
+                </div>
+            </div>
+            
+            <div class="profile-section">
+                <h3>Dernières lettres générées</h3>
+                
+                <table class="history-table" id="lettersTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Entreprise</th>
+                            <th>Poste</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lettersTableBody">
+                        <!-- Les données seront ajoutées dynamiquement -->
+                    </tbody>
+                </table>
+                
+                <div class="no-data" id="noLettersMessage" style="display: none;">
+                    Aucune lettre générée pour le moment.
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="settingsTab">
+            <div class="profile-section">
+                <h3>Informations personnelles</h3>
+                
+                <div class="user-settings">
+                    <div class="form-group">
+                        <label for="nomInput">Nom</label>
+                        <input type="text" id="nomInput" placeholder="Votre nom">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="emailInput">Email</label>
+                        <input type="email" id="emailInput" placeholder="Votre email" disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="passwordInput">Nouveau mot de passe</label>
+                        <input type="password" id="passwordInput" placeholder="Laisser vide pour ne pas modifier">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPasswordInput">Confirmer le mot de passe</label>
+                        <input type="password" id="confirmPasswordInput" placeholder="Confirmer le nouveau mot de passe">
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn" id="saveSettingsBtn">Enregistrer les modifications</button>
+                    <button class="action-btn secondary" id="logoutBtn">Se déconnecter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fonction pour afficher un message flash
+        function showFlashMessage(message, type) {
+            const flashElement = document.getElementById('flashMessage');
+            flashElement.textContent = message;
+            flashElement.className = 'flash-message ' + type;
+            flashElement.style.display = 'block';
+            
+            // Faire disparaître le message après 3 secondes
+            setTimeout(() => {
+                flashElement.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Vérifier si l'utilisateur est connecté
+        document.addEventListener('DOMContentLoaded', function() {
+            // Récupérer les données de l'utilisateur depuis le localStorage
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            // Si aucun utilisateur n'est connecté, rediriger vers la page de connexion
+            if (!currentUser.nom) {
+                showFlashMessage('Veuillez vous connecter pour accéder à votre profil.', 'error');
+                setTimeout(() => {
+                    window.location.href = 'connexion.html';
+                }, 1500);
+                return;
+            }
+            
+            // Charger les informations du profil
+            loadUserProfile();
+            
+            // Initialiser la navigation par onglets
+            initTabs();
+            
+            // Ajouter les écouteurs d'événements
+            addEventListeners();
+        });
+        
+        // Fonction pour charger les informations du profil utilisateur
+        function loadUserProfile() {
+            // Récupérer les données de l'utilisateur depuis le localStorage
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            // Mettre à jour les informations d'en-tête
+            document.getElementById('userName').textContent = currentUser.nom;
+            document.getElementById('userEmail').textContent = currentUser.email || '';
+            
+            // Mettre à jour les compteurs
+            const tokens = currentUser.tokens || 0;
+            if (tokens === -1) {
+                // Afficher "∞" pour les jetons illimités
+                document.getElementById('tokensValue').textContent = '∞';
+                // Afficher le badge premium
+                document.getElementById('premiumBadge').style.display = 'inline-block';
+            } else {
+                document.getElementById('tokensValue').textContent = tokens;
+                // Vérifier si l'utilisateur est premium
+                if (currentUser.premium) {
+                    document.getElementById('premiumBadge').style.display = 'inline-block';
+                }
+            }
+            
+            // Charger le nombre de lettres générées (à partir de l'historique ou d'un compteur)
+            const lettersCount = currentUser.lettersHistory ? currentUser.lettersHistory.length : 0;
+            document.getElementById('lettersCount').textContent = lettersCount;
+            
+            // Remplir les champs du formulaire de paramètres
+            document.getElementById('nomInput').value = currentUser.nom;
+            document.getElementById('emailInput').value = currentUser.email || '';
+            
+            // Charger l'historique des paiements
+            loadPaymentsHistory(currentUser);
+            
+            // Charger l'historique des lettres
+            loadLettersHistory(currentUser);
+        }
+        
+        // Fonction pour charger l'historique des paiements
+        function loadPaymentsHistory(user) {
+            const tableBody = document.getElementById('paymentsTableBody');
+            const noPaymentsMessage = document.getElementById('noPaymentsMessage');
+            
+            // Vider le tableau
+            tableBody.innerHTML = '';
+            
+            // Vérifier s'il y a des paiements
+            if (!user.payments || user.payments.length === 0) {
+                noPaymentsMessage.style.display = 'block';
+                return;
+            }
+            
+            // Masquer le message "aucun paiement"
+            noPaymentsMessage.style.display = 'none';
+            
+            // Ajouter chaque paiement au tableau
+            user.payments.forEach(payment => {
+                const row = document.createElement('tr');
+                
+                // Formater la date
+                const paymentDate = new Date(payment.date);
+                const formattedDate = paymentDate.toLocaleDateString('fr-FR');
+                
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${payment.planName}</td>
+                    <td>${payment.amount.toFixed(2)}€</td>
+                    <td>${payment.tokens === -1 ? '∞' : payment.tokens}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fonction pour charger l'historique des lettres
+        function loadLettersHistory(user) {
+            const tableBody = document.getElementById('lettersTableBody');
+            const noLettersMessage = document.getElementById('noLettersMessage');
+            
+            // Vider le tableau
+            tableBody.innerHTML = '';
+            
+            // Vérifier s'il y a des lettres générées
+            if (!user.lettersHistory || user.lettersHistory.length === 0) {
+                noLettersMessage.style.display = 'block';
+                return;
+            }
+            
+            // Masquer le message "aucune lettre"
+            noLettersMessage.style.display = 'none';
+            
+            // Ajouter chaque lettre au tableau
+            user.lettersHistory.forEach(letter => {
+                const row = document.createElement('tr');
+                
+                // Formater la date
+                const letterDate = new Date(letter.date);
+                const formattedDate = letterDate.toLocaleDateString('fr-FR');
+                
+                row.innerHTML = `
+                    <td>${formattedDate}</td>
+                    <td>${letter.entreprise}</td>
+                    <td>${letter.poste || '-'}</td>
+                    <td>
+                        <button class="action-btn secondary" style="padding: 5px 10px; font-size: 12px;" data-letter-id="${letter.id}">Voir</button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fonction pour initialiser la navigation par onglets
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Supprimer la classe active de tous les onglets
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Ajouter la classe active à l'onglet cliqué
+                    this.classList.add('active');
+                    
+                    // Masquer tous les contenus d'onglet
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Afficher le contenu de l'onglet sélectionné
+                    const tabId = this.getAttribute('data-tab') + 'Tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // Fonction pour ajouter les écouteurs d'événements
+        function addEventListeners() {
+            // Enregistrer les modifications du profil
+            document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+                saveUserSettings();
+            });
+            
+            // Se déconnecter
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                logout();
+            });
+            
+            // Écouteurs pour les boutons d'achat
+            document.querySelectorAll('.offer-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const planId = this.getAttribute('data-plan-id');
+                    buyPlan(planId);
+                });
+            });
+            
+            // Écouteurs pour les boutons "Voir" des lettres
+            document.querySelectorAll('[data-letter-id]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const letterId = this.getAttribute('data-letter-id');
+                    viewLetter(letterId);
+                });
+            });
+        }
+        
+        // Fonction pour enregistrer les modifications du profil
+        function saveUserSettings() {
+            const nom = document.getElementById('nomInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
+            
+            // Validation du nom
+            if (!nom) {
+                showFlashMessage('Veuillez entrer votre nom.', 'error');
+                return;
+            }
+            
+            // Validation du mot de passe (si fourni)
+            if (password) {
+                if (password.length < 8) {
+                    showFlashMessage('Le mot de passe doit contenir au moins 8 caractères.', 'error');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    showFlashMessage('Les mots de passe ne correspondent pas.', 'error');
+                    return;
+                }
+            }
+            
+            // Récupérer l'utilisateur actuel
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            // Mettre à jour les informations
+            currentUser.nom = nom;
+            
+            // Mettre à jour le mot de passe si fourni
+            if (password) {
+                currentUser.password = password;
+            }
+            
+            // Enregistrer les modifications
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Mettre à jour l'affichage du nom
+            document.getElementById('userName').textContent = nom;
+            
+            // Afficher un message de succès
+            showFlashMessage('Modifications enregistrées avec succès.', 'success');
+        }
+        
+        // Fonction pour se déconnecter
+        function logout() {
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                localStorage.removeItem('currentUser');
+                showFlashMessage('Vous avez été déconnecté avec succès.', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            }
+        }
+        
+        // Fonction pour acheter un plan
+        function buyPlan(planId) {
+            // Plans disponibles
+            const plans = {
+                'basic': { id: 'basic', name: 'Formule Basique', price: 1.00, tokens: 10 },
+                'standard': { id: 'standard', name: 'Formule Standard', price: 4.99, tokens: 50 },
+                'premium': { id: 'premium', name: 'Formule Premium', price: 9.99, tokens: 120 },
+                'unlimited': { id: 'unlimited', name: 'Formule Illimitée', price: 19.99, tokens: -1 }
+            };
+            
+            const selectedPlan = plans[planId];
+            
+            if (!selectedPlan) {
+                showFlashMessage('Plan non disponible', 'error');
+                return;
+            }
+            
+            // Confirmer l'achat
+            if (!confirm(`Vous allez acheter la ${selectedPlan.name} pour ${selectedPlan.price.toFixed(2)}€. Voulez-vous continuer?`)) {
+                return;
+            }
+            
+            // Simuler le paiement
+            showFlashMessage('Traitement du paiement...', 'success');
+            
+            setTimeout(() => {
+                // Mettre à jour les données utilisateur
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                
+                // Ajouter les jetons au compte de l'utilisateur
+                if (selectedPlan.tokens === -1) {
+                    currentUser.tokens = -1;
+                    currentUser.premium = true;
+                } else {
+                    const currentTokens = currentUser.tokens || 0;
+                    currentUser.tokens = currentTokens === -1 ? -1 : currentTokens + selectedPlan.tokens;
+                }
+                
+                // Ajouter l'information de paiement
+                if (!currentUser.payments) currentUser.payments = [];
+                currentUser.payments.push({
+                    plan: selectedPlan.id,
+                    planName: selectedPlan.name,
+                    amount: selectedPlan.price,
+                    tokens: selectedPlan.tokens,
+                    date: new Date().toISOString(),
+                    paymentId: 'pi_' + Math.random().toString(36).substr(2, 9)
+                });
+                
+                // Sauvegarder les données utilisateur
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                // Afficher un message de succès
+                showFlashMessage(`Paiement réussi! Vous avez acquis ${selectedPlan.tokens === -1 ? 'des jetons illimités' : selectedPlan.tokens + ' jetons'}.`, 'success');
+                
+                // Actualiser la page pour mettre à jour l'affichage
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }, 1500);
+        }
+        
+        // Fonction pour voir une lettre
+        function viewLetter(letterId) {
+            // Récupérer l'utilisateur
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            // Trouver la lettre correspondante
+            if (!currentUser.lettersHistory) return;
+            
+            const letter = currentUser.lettersHistory.find(letter => letter.id === letterId);
+            
+            if (!letter) {
+                showFlashMessage('Lettre non trouvée.', 'error');
+                return;
+            }
+            
+            // Créer un modal pour afficher la lettre
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.zIndex = '9999';
+            
+            const content = document.createElement('div');
+            content.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+            content.style.padding = '20px';
+            content.style.borderRadius = '8px';
+            content.style.maxWidth = '600px';
+            content.style.width = '90%';
+            content.style.maxHeight = '80vh';
+            content.style.overflow = 'auto';
+            
+            // Ajouter le contenu de la lettre
+            content.innerHTML = `
+                <h3>Lettre pour ${letter.entreprise}</h3>
+                <p><strong>Date:</strong> ${new Date(letter.date).toLocaleDateString('fr-FR')}</p>
+                <p><strong>Poste:</strong> ${letter.poste || '-'}</p>
+                <div style="margin-top: 20px; white-space: pre-wrap; font-family: 'Courier New', monospace; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                    ${letter.content || "Le contenu de cette lettre n'est pas disponible."}
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button id="closeLetterBtn" style="background-color: #D46836; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Fermer</button>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // Ajouter l'événement pour fermer le modal
+            document.getElementById('closeLetterBtn').addEventListener('click', function() {
+                document.body.removeChild(modal);
+            });
+        }
+    </script>
+</body>
+</html>

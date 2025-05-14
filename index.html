@@ -6,9 +6,6 @@
     <title>Générateur de Lettres de Motivation</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    <script src="https://js.stripe.com/v3/"></script>
-    <a href="connexion.html" class="login-link">Connexion</a>
-        <a href="inscription.html" class="signup-link">Inscription</a>
     <style>
         @import url('https://fonts.googleapis.com/css?family=Raleway:100,400,700');
         
@@ -24,6 +21,46 @@
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+        
+        /* Navbar styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            padding: 15px 30px;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+        
+        .auth-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .auth-links a {
+            color: white;
+            text-decoration: none;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 4px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: background-color 0.3s;
+            font-weight: 500;
+        }
+        
+        .auth-links a:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        
+        .auth-links .user-welcome {
+            color: white;
+            padding: 8px 15px;
+            font-weight: 500;
         }
         
         .container {
@@ -127,7 +164,8 @@
         }
         
         button:hover {
-            background-color: #D46836;
+            background-color: #C14E26;
+            opacity: 0.9;
         }
         
         button:disabled {
@@ -242,7 +280,7 @@
         }
 
         #boutonPayer:hover {
-            background-color: #D46836;
+            background-color: #C14E26;
         }
 
         .note {
@@ -347,9 +385,77 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Style pour le compteur d'essais gratuits en dehors du cadre */
+        .compteur-utilisations-externe {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .compteur-utilisations-externe span {
+            font-weight: bold;
+            color: #D46836;
+            font-size: 24px;
+            display: block;
+            margin: 5px 0;
+        }
+
+        /* Style pour les boutons d'authentification en milieu d'écran */
+        .auth-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .auth-center a, .auth-center button {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .auth-center a:hover, .auth-center button:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .user-greeting {
+            color: white;
+            margin-right: 15px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
+    <!-- Navbar avec liens d'authentification -->
+    <div class="navbar">
+        <div class="auth-links" id="authLinks">
+            <a href="connexion.html" class="login-link">Connexion</a>
+            <a href="register.html" class="signup-link">Inscription</a>
+            <a href="profile.html" class="profile-link">Mon profil</a>
+        </div>
+    </div>
+
     <div class="container">
         <h1>Générateur de Lettres de Motivation</h1>
         
@@ -366,7 +472,6 @@
                 <label for="entreprise">Nom de l'entreprise:</label>
                 <input type="text" id="entreprise" placeholder="Ex: Microsoft, Google, etc.">
             </div>
-            
             <div class="form-group">
                 <label for="poste">Intitulé du poste (optionnel):</label>
                 <input type="text" id="poste" placeholder="Ex: Développeur Web Senior">
@@ -455,16 +560,18 @@
         </div>
     </div>
 
-    <script>
-        // Configuration de Stripe
-        // Remplacer par votre clé publique Stripe
-        const stripePublicKey = 'pk_test_TYooMQauvdEDq54NiTphI7jx';
-        const stripe = Stripe(stripePublicKey);
+    <!-- Div pour afficher les contrôles d'authentification au centre de l'écran -->
+    <div id="authCenter" class="auth-center" style="display: none;">
+        <!-- Le contenu sera ajouté dynamiquement -->
+    </div>
 
+    <script>
+        
         // Fonction pour vérifier si l'utilisateur a encore des essais gratuits
         function verifierEssaisGratuits() {
             // Vérifier si l'utilisateur a un abonnement premium
-            if (localStorage.getItem('premiumActive') === 'true') {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (currentUser.premium === true || localStorage.getItem('premiumActive') === 'true') {
                 return true;
             }
             
@@ -498,7 +605,7 @@
 
         // Fonction pour mettre à jour le compteur affiché
         function mettreAJourCompteurAffiche() {
-            const compteurElement = document.querySelector('.compteur-utilisations');
+            const compteurElement = document.querySelector('.compteur-utilisations-externe');
             if (compteurElement) {
                 const utilisations = parseInt(localStorage.getItem('utilisationsCompteur') || '0');
                 const restantes = 5 - utilisations;
@@ -511,96 +618,8 @@
             // Cacher le contenu de l'application
             document.querySelector('.container').style.display = 'none';
             
-            // Créer et afficher la page de paiement
-            const pagePaiement = document.createElement('div');
-            pagePaiement.className = 'page-paiement';
-            pagePaiement.innerHTML = `
-                <div class="container-paiement">
-                    <h2>Accès limité</h2>
-                    <p>Vous avez utilisé vos 5 essais gratuits.</p>
-                    <p>Pour continuer à utiliser notre générateur de lettres de motivation, veuillez souscrire à notre offre premium pour seulement 1€.</p>
-                    
-                    <form id="stripe-payment-form">
-                        <div id="card-element">
-                            <!-- Les éléments Stripe seront insérés ici -->
-                        </div>
-                        <div id="card-error" role="alert"></div>
-                        
-                        <button id="boutonPayer">
-                            <div class="spinner" id="spinner"></div>
-                            <span id="button-text">Payer 1€ et continuer</span>
-                        </button>
-                    </form>
-                    
-                    <p class="note">* Pour cet exemple, utilisez le numéro de carte 4242 4242 4242 4242, une date future et un code CVC à 3 chiffres.</p>
-                </div>
-            `;
-            
-            document.body.appendChild(pagePaiement);
-            
-            // Créer un élément de carte Stripe
-            const elements = stripe.elements();
-            const style = {
-                base: {
-                    color: "#32325d",
-                    fontFamily: 'Raleway, sans-serif',
-                    fontSmoothing: "antialiased",
-                    fontSize: "16px",
-                    "::placeholder": {
-                        color: "#aab7c4"
-                    }
-                },
-                invalid: {
-                    color: "#D46836",
-                    iconColor: "#D46836"
-                }
-            };
-            
-            const card = elements.create("card", { style: style });
-            card.mount("#card-element");
-            
-            // Gérer les erreurs de validation de la carte
-            card.on("change", function(event) {
-                const displayError = document.getElementById("card-error");
-                if (event.error) {
-                    displayError.textContent = event.error.message;
-                } else {
-                    displayError.textContent = "";
-                }
-            });
-            
-            // Gérer la soumission du formulaire
-            const form = document.getElementById("stripe-payment-form");
-            form.addEventListener("submit", function(event) {
-                event.preventDefault();
-                
-                // Désactiver le bouton pendant le traitement du paiement
-                const boutonPayer = document.getElementById("boutonPayer");
-                boutonPayer.disabled = true;
-                document.getElementById("spinner").style.display = "inline-block";
-                document.getElementById("button-text").style.opacity = "0.5";
-                
-                // Simuler un paiement réussi (dans un contexte réel, vous appelleriez votre backend)
-                setTimeout(function() {
-                    // Activer l'accès premium
-                    localStorage.setItem('premiumActive', 'true');
-                    localStorage.setItem('utilisationsCompteur', '0');
-                    
-                    // Afficher un message de succès
-                    const containerPaiement = document.querySelector('.container-paiement');
-                    containerPaiement.innerHTML = `
-                        <h2>Paiement réussi !</h2>
-                        <p>Merci pour votre achat. Vous avez maintenant un accès premium illimité à notre générateur de lettres de motivation.</p>
-                        <button id="retourApp">Retourner à l'application</button>
-                    `;
-                    
-                    document.getElementById("retourApp").addEventListener('click', function() {
-                        pagePaiement.remove();
-                        document.querySelector('.container').style.display = 'block';
-                        mettreAJourCompteurAffiche();
-                    });
-                }, 2000);
-            });
+            // Utiliser la nouvelle intégration Stripe
+            stripeIntegration.showPaymentPage('paymentContainer');
         }
 
         // Template par défaut
@@ -681,6 +700,32 @@ Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distin
             const date = getFormattedDate();
             lettre = lettre.replace('[Date]', date);
             
+            // Enregistrer la lettre dans l'historique si l'utilisateur est connecté
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (currentUser.nom) {
+                if (!currentUser.lettersHistory) {
+                    currentUser.lettersHistory = [];
+                }
+                
+                // Ajouter la nouvelle lettre à l'historique
+                currentUser.lettersHistory.unshift({
+                    id: 'letter_' + Date.now(),
+                    date: new Date().toISOString(),
+                    entreprise: entreprise,
+                    poste: poste || '[Non spécifié]',
+                    template: templateKey,
+                    content: lettre
+                });
+                
+                // Limiter l'historique à 20 lettres
+                if (currentUser.lettersHistory.length > 20) {
+                    currentUser.lettersHistory = currentUser.lettersHistory.slice(0, 20);
+                }
+                
+                // Sauvegarder les modifications
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
             return lettre;
         }
 
@@ -724,6 +769,70 @@ Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distin
                 .catch(err => {
                     showFlashMessage('Erreur lors de la copie: ' + err, 'error');
                 });
+        }
+
+        // Fonction pour mettre à jour l'interface utilisateur d'authentification
+        function updateAuthUI() {
+            // Récupérer les informations de l'utilisateur
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            
+            // Mettre à jour la barre de navigation
+            const authLinks = document.getElementById('authLinks');
+            const authCenter = document.getElementById('authCenter');
+            
+            if (currentUser.nom) {
+                // L'utilisateur est connecté
+                
+                // Mettre à jour les liens en haut à droite
+                authLinks.innerHTML = `
+                    <a href="profile.html" class="profile-link">Mon profil</a>
+                    <a href="#" id="logoutLink">Déconnexion</a>
+                `;
+                
+                // Ajouter l'événement de déconnexion
+                document.getElementById('logoutLink').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('currentUser');
+                    showFlashMessage('Vous avez été déconnecté avec succès.', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                });
+                
+                // Afficher les informations au centre de l'écran
+                authCenter.style.display = 'none';
+                                authCenter.innerHTML = `
+                    <span class="user-greeting">Bonjour, ${currentUser.nom}</span>
+                    <button id="logoutCenterBtn">Déconnexion</button>
+                `;
+                
+                // Ajouter l'événement de déconnexion au bouton central
+                document.getElementById('logoutCenterBtn').addEventListener('click', function() {
+                    localStorage.removeItem('currentUser');
+                    showFlashMessage('Vous avez été déconnecté avec succès.', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                });
+                
+                // Masquer le compteur d'essais gratuits si l'utilisateur est premium
+                if (currentUser.premium || localStorage.getItem('premiumActive') === 'true') {
+                    const compteurElement = document.querySelector('.compteur-utilisations-externe');
+                    if (compteurElement) {
+                        compteurElement.style.display = 'none';
+                    }
+                }
+            } else {
+                // L'utilisateur n'est pas connecté
+                authLinks.innerHTML = `
+                    <a href="connexion.html" class="login-link">Connexion</a>
+                    <a href="register.html" class="signup-link">Inscription</a>
+                    <a href="profile.html" class="profile-link">Mon profil</a>
+                `;
+                
+                // Cacher les informations au centre de l'écran
+                authCenter.style.display = 'none';
+            }
         }
 
         // Fonction pour charger les templates depuis le localStorage
@@ -830,6 +939,9 @@ Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distin
 
         // Initialisation au chargement de la page
         $(document).ready(function() {
+            // Mettre à jour l'interface d'authentification
+            updateAuthUI();
+
             // Rendre la fenêtre déplaçable
             $(".container").draggable({
                 handle: "h1",
@@ -839,9 +951,9 @@ Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distin
             
             // Ajouter un compteur d'essais gratuits
             const compteurUtilisations = document.createElement('div');
-            compteurUtilisations.className = 'compteur-utilisations';
-            compteurUtilisations.innerHTML = '<p>Essais gratuits restants: <span>5</span></p>';
-            document.querySelector('.container').appendChild(compteurUtilisations);
+            compteurUtilisations.className = 'compteur-utilisations-externe';
+            compteurUtilisations.innerHTML = '<p>Essais gratuits</p><span>5</span><p>restants</p>';
+            document.body.appendChild(compteurUtilisations);
             
             // Mettre à jour l'affichage du compteur
             mettreAJourCompteurAffiche();
@@ -1070,7 +1182,70 @@ Jean Dupont`;
                 $("#templateContent").val('');
                 $("#templateName").removeData("editKey");
             });
+            
+            // Attacher l'événement au lien de profil
+            $(".profile-link").click(function(e) {
+                // Si l'utilisateur n'est pas connecté, afficher un message
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                if (!currentUser.nom) {
+                    e.preventDefault();
+                    showFlashMessage('Veuillez vous connecter pour accéder à votre profil.', 'error');
+                    setTimeout(() => {
+                        window.location.href = 'connexion.html';
+                    }, 1500);
+                }
+                // Sinon, laisser le navigateur suivre le lien normalement
+            });
         });
     </script>
+    <script>
+        // Vérifier si l'utilisateur connecté est un administrateur et ajouter un lien rapide
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            if (currentUser.role === 'admin') {
+                // Créer un bouton d'accès rapide à l'admin
+                const adminButton = document.createElement('a');
+                adminButton.href = 'admin.html';
+                adminButton.textContent = 'Administration';
+                adminButton.style.position = 'fixed';
+                adminButton.style.bottom = '20px';
+                adminButton.style.left = '20px';
+                adminButton.style.padding = '10px 15px';
+                adminButton.style.backgroundColor = '#D46836';
+                adminButton.style.color = 'white';
+                adminButton.style.borderRadius = '4px';
+                adminButton.style.textDecoration = 'none';
+                adminButton.style.zIndex = '9999';
+                document.body.appendChild(adminButton);
+            }
+        });
+        </script>
+<div id="paymentContainer" style="display: none;"></div>
+<script>
+    // Fixer le système d'onglets
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          // Enlever la classe active de tous les onglets
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+            content.style.display = 'none';
+          });
+          
+          // Ajouter la classe active à l'onglet cliqué
+          this.classList.add('active');
+          
+          // Afficher le contenu correspondant
+          const tabId = this.getAttribute('data-tab') + 'Tab';
+          const content = document.getElementById(tabId);
+          if (content) {
+            content.classList.add('active');
+            content.style.display = 'block';
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>
